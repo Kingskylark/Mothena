@@ -36,8 +36,7 @@ COMMENT 'User account status: 1 = active, 0 = inactive';
 -- Optional: Add an index on is_active for better query performance
 CREATE INDEX idx_users_is_active ON users(is_active);
 
--- Verify the column was added successfully
-DESCRIBE users;
+
 -- ============================================
 -- 2. CONTENT LIBRARY TABLE
 -- ============================================
@@ -58,6 +57,8 @@ CREATE TABLE content (
 );
 
 ALTER TABLE content ADD COLUMN image_url VARCHAR(255) AFTER content_text;
+
+
 -- ============================================
 -- 3. USER INTERACTIONS TABLE
 -- ============================================
@@ -240,41 +241,6 @@ CREATE INDEX idx_users_age ON users(age);
 CREATE INDEX idx_user_interactions_user ON user_interactions(user_id);
 CREATE INDEX idx_reminders_user_date ON reminders(user_id, due_date);
 
--- ============================================
--- VERIFICATION QUERIES
--- Run these to verify your data was inserted correctly
--- ============================================
-
--- Check users
-SELECT COUNT(*) as total_users FROM users;
-
--- Check content by trimester
-SELECT trimester, COUNT(*) as content_count FROM content GROUP BY trimester;
-
--- Check content by category
-SELECT category, COUNT(*) as content_count FROM content GROUP BY category;
-
--- Check sample user with their info
-SELECT name, age, trimester, interests FROM users WHERE email = 'amina@email.com';
-
--- ============================================
--- ADMIN QUERIES (Useful for managing content)
--- ============================================
-
--- Get all featured content
--- SELECT * FROM content WHERE is_featured = TRUE ORDER BY created_at DESC;
-
--- Get most viewed content
--- SELECT title, view_count FROM content ORDER BY view_count DESC LIMIT 10;
-
--- Get users by trimester
--- SELECT trimester, COUNT(*) as user_count FROM users GROUP BY trimester;
-
--- Get upcoming reminders
--- SELECT u.name, r.title, r.due_date FROM reminders r 
--- JOIN users u ON r.user_id = u.id 
--- WHERE r.due_date >= CURDATE() AND r.is_completed = FALSE 
--- ORDER BY r.due_date;
 
 -- ============================================
 -- 6. ADMIN USERS TABLE
@@ -298,7 +264,7 @@ CREATE TABLE admin_users (
 );
 
 -- ============================================
--- 7. ADMIN ACTIVITY LOG TABLE (Optional but recommended)
+-- 7. ADMIN ACTIVITY LOG TABLE 
 -- ============================================
 CREATE TABLE admin_activity_log (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -346,15 +312,6 @@ CREATE INDEX idx_admin_log_admin ON admin_activity_log(admin_id);
 CREATE INDEX idx_admin_log_action ON admin_activity_log(action);
 CREATE INDEX idx_admin_log_date ON admin_activity_log(created_at);
 
--- ============================================
--- VERIFICATION QUERIES
--- ============================================
-
--- Check admin users were created
-SELECT id, username, email, full_name, role, is_active FROM admin_users;
-
--- Count admin users by role
-SELECT role, COUNT(*) as count FROM admin_users GROUP BY role;
 
 -- ============================================
 -- ADMIN LOGIN CREDENTIALS FOR TESTING
