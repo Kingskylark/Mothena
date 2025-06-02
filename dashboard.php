@@ -26,7 +26,7 @@ if ($_POST && isset($_POST['contact_admin'])) {
         $contact_error = 'Please fill in all fields.';
     } else {
         // Insert message into user_messages table
-        $stmt = $conn->prepare("INSERT INTO user_messages (user_id, subject, message, status) VALUES (?, ?, ?, 'pending')");
+        $stmt = $conn->prepare("INSERT INTO user_messages (user_id, subject, message, is_read) VALUES (?, ?, ?, 'pending')");
         $stmt->bind_param("iss", $current_user['id'], $subject, $message);
 
         if ($stmt->execute()) {
