@@ -1,0 +1,104 @@
+/* Admin panel specific styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.navbar-brand i {
+    color: #ffc107;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stats-card h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stats-card p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #343a40;
+    color: white;
+    border: none;
+}
+
+.btn-admin {
+    border-radius: 5px;
+    font-size: 0.875rem;
+}
+
+.admin-sidebar {
+    background-color: #343a40;
+    min-height: calc(100vh - 56px);
+    padding: 20px 0;
+}
+
+.admin-sidebar .nav-link {
+    color: #adb5bd;
+    padding: 10px 20px;
+}
+
+.admin-sidebar .nav-link:hover {
+    color: white;
+    background-color: #495057;
+}
+
+.admin-sidebar .nav-link.active {
+    color: white;
+    background-color: #007bff;
+}
+
+.content-area {
+    padding: 20px;
+}
+
+.search-box {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Status badges */
+.badge-success { background-color: #28a745; }
+.badge-danger { background-color: #dc3545; }
+.badge-warning { background-color: #ffc107; color: #212529; }
+.badge-info { background-color: #17a2b8; }
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-admin {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+}
+
+
