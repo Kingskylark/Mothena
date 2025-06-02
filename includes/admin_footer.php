@@ -1,5 +1,5 @@
-<footer class="bg-dark text-light mt-5 py-3">
-    <div class="container-fluid">
+<footer class="bg-dark text-light mt-5 py-4">
+    <div class="container">
         <div class="text-center">
             <p>&copy; 2025 Antenatal Care - Admin Panel. All rights reserved.</p>
         </div>
