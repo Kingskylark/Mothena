@@ -17,17 +17,25 @@ if ($_POST) {
     if (empty($email) || empty($password)) {
         $error = 'Please enter both email and password.';
     } else {
-        $query = "SELECT * FROM users WHERE email = '$email'";
-        $result = $conn->query($query);
+        // Use prepared statement to prevent SQL injection
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
         if ($result && $result->num_rows > 0) {
             $user = $result->fetch_assoc();
 
-            if (verifyPassword($password, $user['password'])) {
-                // Update last login
-                $conn->query("UPDATE users SET last_login = NOW() WHERE id = " . $user['id']);
+            // Use PHP's built-in password_verify function
+            if (password_verify($password, $user['password'])) {
+                // Update last login using prepared statement
+                $update_stmt = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+                $update_stmt->bind_param("i", $user['id']);
+                $update_stmt->execute();
+                $update_stmt->close();
 
                 // Set session
+                session_start();
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
 
@@ -38,6 +46,7 @@ if ($_POST) {
         } else {
             $error = 'Invalid email or password.';
         }
+        $stmt->close();
     }
 }
 
@@ -74,6 +83,7 @@ include 'includes/header.php';
                     </form>
 
                     <div class="text-center mt-3">
+                        <p> <a href="forgot_password.php">Forgot Password?</a></p>
                         <p>Don't have an account? <a href="register.php">Register here</a></p>
                     </div>
                 </div>
