@@ -49,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_reminder'])) {
     }
 }
 
+
+// Replace this block in your code (around lines 45-62):
+
 // Handle reminder creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reminder'])) {
     $user_id = (int) ($_POST['user_id'] ?? 0);
@@ -61,13 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_reminder'])) {
     if (!$user_id || !$reminder_type || !$title || !$due_date) {
         $error = "All required fields must be filled.";
     } else {
-        $query = "INSERT INTO reminders (user_id, reminder_type, title, description, due_date, due_time)
-                  VALUES (?, ?, ?, ?, ?, ?)";
+        // Automatically set is_sent = 1 when creating new reminders
+        $query = "INSERT INTO reminders (user_id, reminder_type, title, description, due_date, due_time, is_sent)
+                  VALUES (?, ?, ?, ?, ?, ?, 1)";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("isssss", $user_id, $reminder_type, $title, $description, $due_date, $due_time);
 
         if ($stmt->execute()) {
-            $success = "Reminder added successfully!";
+            $success = "Reminder added and sent successfully!";
         } else {
             $error = "Failed to add reminder.";
         }
@@ -171,7 +175,7 @@ include '../includes/admin_header.php';
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
             <?php if ($edit_reminder): ?>
-                <a href="manage_reminders.php" class="btn btn-secondary me-md-2">Cancel</a>
+                <a href="admin_reminders.php" class="btn btn-secondary me-md-2">Cancel</a>
                 <button type="submit" name="edit_reminder" class="btn btn-success">Update Reminder</button>
             <?php else: ?>
                 <button type="submit" name="add_reminder" class="btn btn-primary">Add Reminder</button>
