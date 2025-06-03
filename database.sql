@@ -355,3 +355,26 @@ CREATE TABLE user_messages (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (replied_by) REFERENCES admin_users(id) ON DELETE SET NULL
 );
+
+ALTER TABLE user_messages 
+ADD COLUMN IF NOT EXISTS status ENUM('pending', 'replied', 'closed') DEFAULT 'pending' AFTER message,
+ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP NULL DEFAULT NULL AFTER admin_reply;
+
+-- Change is_read to TINYINT if it's not already (0 = unread, 1 = read)
+ALTER TABLE user_messages 
+MODIFY COLUMN is_read TINYINT(1) DEFAULT 0;
+
+-- Set status to 'replied' where admin_reply exists and is not empty
+UPDATE user_messages 
+SET status = 'replied' 
+WHERE admin_reply IS NOT NULL AND admin_reply != '' AND status = 'pending';
+
+-- Set replied_at timestamp for existing replies (use created_at as fallback)
+UPDATE user_messages 
+SET replied_at = created_at 
+WHERE admin_reply IS NOT NULL AND admin_reply != '' AND replied_at IS NULL;
+
+-- Optional: Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_user_messages_user_status ON user_messages(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_user_messages_user_read ON user_messages(user_id, is_read);
+

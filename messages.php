@@ -38,7 +38,7 @@ if ($_POST && isset($_POST['send_message'])) {
         $contact_error = 'Please fill in all fields.';
     } else {
         // Insert message into user_messages table
-        $stmt = $conn->prepare("INSERT INTO user_messages (user_id, subject, message, is_read) VALUES (?, ?, ?, 'pending')");
+        $stmt = $conn->prepare("INSERT INTO user_messages (user_id, subject, message, status, is_read) VALUES (?, ?, ?, 'pending', 0)");
         $stmt->bind_param("iss", $current_user['id'], $subject, $message);
 
         if ($stmt->execute()) {
@@ -69,21 +69,25 @@ $count_stmt->close();
 // Get all user messages with pagination
 $user_messages = [];
 $stmt = $conn->prepare("
-    SELECT id, subject, message, admin_reply, is_read, created_at, replied_at, is_read
+    SELECT id, subject, message, admin_reply, status, is_read, created_at, replied_at
     FROM user_messages 
     WHERE user_id = ? 
     ORDER BY created_at DESC 
     LIMIT ? OFFSET ?
 ");
+
+// THIS WAS MISSING - Execute the statement and fetch results
 $stmt->bind_param("iii", $current_user['id'], $per_page, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
+
+// Fetch all messages into the array
 while ($row = $result->fetch_assoc()) {
     $user_messages[] = $row;
 }
 $stmt->close();
 
-// Count stats
+// Count stats - Fixed version
 $stats = [
     'total' => $total_messages,
     'pending' => 0,
@@ -91,25 +95,40 @@ $stats = [
     'unread_replies' => 0
 ];
 
+// Get statistics by status
 $stats_stmt = $conn->prepare("
-    SELECT 
-        is_read,
-        COUNT(*) as count,
-        SUM(CASE WHEN admin_reply IS NOT NULL AND admin_reply != '' AND is_read = 0 THEN 1 ELSE 0 END) as unread_replies
+    SELECT status, COUNT(*) as count
     FROM user_messages 
     WHERE user_id = ? 
-    GROUP BY is_read
+    GROUP BY status
 ");
 $stats_stmt->bind_param("i", $current_user['id']);
 $stats_stmt->execute();
 $stats_result = $stats_stmt->get_result();
 while ($row = $stats_result->fetch_assoc()) {
-    $stats[$row['is_read']] = $row['count'];
-    $stats['unread_replies'] += $row['unread_replies'];
+    $stats[$row['status']] = $row['count'];
 }
 $stats_stmt->close();
 
-include 'includes/header.php';
+// Get unread replies count
+$unread_stmt = $conn->prepare("
+    SELECT COUNT(*) as unread_count
+    FROM user_messages 
+    WHERE user_id = ? AND status = 'replied' AND is_read = 0
+");
+$unread_stmt->bind_param("i", $current_user['id']);
+$unread_stmt->execute();
+$unread_result = $unread_stmt->get_result();
+$stats['unread_replies'] = $unread_result->fetch_assoc()['unread_count'];
+$unread_stmt->close();
+
+// Debug output (remove after confirming it works)
+echo "<!-- DEBUG: Total messages in DB: " . $total_messages . " -->";
+echo "<!-- DEBUG: Messages fetched for display: " . count($user_messages) . " -->";
+echo "<!-- DEBUG: Current page: " . $page . ", Per page: " . $per_page . ", Offset: " . $offset . " -->";
+?>
+
+<?php include 'includes/header.php';
 ?>
 
 <div class="container mt-4">
@@ -147,7 +166,7 @@ include 'includes/header.php';
             <div class="card text-center bg-warning text-dark">
                 <div class="card-body">
                     <i class="fas fa-clock fa-2x mb-2"></i>
-                    <h4><?php echo $stats['pending']; ?></h4>
+                    <h4><?php echo isset($stats['pending']) ? $stats['pending'] : 0; ?></h4>
                     <h6>Pending</h6>
                 </div>
             </div>
@@ -156,7 +175,7 @@ include 'includes/header.php';
             <div class="card text-center bg-success text-white">
                 <div class="card-body">
                     <i class="fas fa-reply fa-2x mb-2"></i>
-                    <h4><?php echo $stats['replied']; ?></h4>
+                    <h4><?php echo isset($stats['replied']) ? $stats['replied'] : 0; ?></h4>
                     <h6>Replied</h6>
                 </div>
             </div>
@@ -216,8 +235,8 @@ include 'includes/header.php';
                                     </div>
                                     <div class="text-end">
                                         <span
-                                            class="badge bg-<?php echo $msg['is_read'] == 'replied' ? 'success' : ($msg['is_read'] == 'pending' ? 'warning' : 'secondary'); ?>">
-                                            <?php echo ucfirst($msg['is_read']); ?>
+                                            class="badge bg-<?php echo $msg['status'] == 'replied' ? 'success' : ($msg['status'] == 'pending' ? 'warning' : 'secondary'); ?>">
+                                            <?php echo ucfirst($msg['status']); ?>
                                         </span>
                                         <?php if (!empty($msg['admin_reply']) && $msg['is_read'] == 0): ?>
                                             <br>
@@ -272,7 +291,7 @@ include 'includes/header.php';
                                             </div>
                                         <?php endif; ?>
                                     </div>
-                                <?php elseif ($msg['is_read'] == 'pending'): ?>
+                                <?php elseif ($msg['status'] == 'pending'): ?>
                                     <div class="pending-reply p-3 bg-warning bg-opacity-10 border border-warning rounded">
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-hourglass-half text-warning me-2"></i>
